@@ -12,7 +12,7 @@ for number in range(1,9):
     for letter in LETTERS:
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
-reverse_UCI_map = {value: key for key, value in UCI_map.items()}
+reverse_UCI_map = {value: key for key, value in UCI_map.items()} # debug tool
 
 class Square:
 
@@ -91,14 +91,53 @@ class Pawn(Square):
 
 class King(Square):
 
-    def __init__(self, position: int, color: str, type_: str) -> None:
+    def __init__(self, position: int, color: str, type_: str, has_moved = False) -> None:
         super().__init__(position, color, type_)
+        self.has_moved = has_moved # Enables Castling if false
+
+    def is_empty(self) -> bool:
+        return super().is_empty()
+    
+    def enemy_color(self):
+        if self.color == 'White':
+            return 'Black'
+        else:
+            return 'White'
+
+    def legal_moves(self):
+        legal = []
+
+        top_left = self.position - 9
+        up = self.position - 8
+        top_right = self.position - 7
+
+        for sq in [top_left, up, top_right]:
+            if sq >= 0 and BOARD[sq].color != self.color and self.position // 8 == sq // 8 + 1:
+                legal.append(sq)
+
+        bottom_left = self.position + 7
+        down = self.position + 8
+        bottom_right = self.position + 9
+
+        for sq in [bottom_left, down, bottom_right]:
+            if sq < 64 and BOARD[sq].color != self.color and self.position // 8 + 1 == sq // 8:
+                legal.append(sq)
+
+        left = self.position - 1
+        right = self.position + 1
+
+        for sq in [left, right]:
+            if sq >= 0 and sq < 64 and self.color != BOARD[sq].color and self.position // 8 == sq // 8:
+                legal.append(sq)
+        
+        return legal
 
 
 class Rook(Square):
 
-    def __init__(self, position: int, color: str, type_: str) -> None:
+    def __init__(self, position: int, color: str, type_: str, has_moved = False) -> None:
         super().__init__(position, color, type_)
+        self.has_moved = has_moved # Enables Castling if false
 
     def is_empty(self) -> bool:
         return super().is_empty()

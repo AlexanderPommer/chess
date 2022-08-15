@@ -25,8 +25,12 @@ class Square:
 
 class Pawn(Square):
 
-    def __init__(self, position: int, color: str, type_: str) -> None:
+    def __init__(self, position: int, color: str, type_: str, en_passant = False) -> None:
         super().__init__(position, color, type_)
+        self.en_passant = en_passant
+
+    def is_empty(self) -> bool:
+        return super().is_empty()
 
     def legal_moves(self):
         legal = []
@@ -36,22 +40,22 @@ class Pawn(Square):
             one_step = self.position + 8
             if one_step < 64 and BOARD[one_step].is_empty():
                 legal.append(one_step)
-            
-            two_steps = self.position + 16
-            if self.position in range(8, 16) and BOARD[two_steps].is_empty():
-                legal.append(two_steps)
-                # TODO en passant
 
             capture_right = self.position + 9
-            # Not in far right column 'h' and enemy piece in position
+            # Not in far right file 'h' and enemy piece in position
             if self.position % 8 != 7 and BOARD[capture_right].is_empty() == False and BOARD[capture_right].color != self.color:
                 legal.append(capture_right)
             
             capture_left = self.position + 7
-            # Not in far left column 'a' and enemy piece in position
+            # Not in far left file 'a' and enemy piece in position
             if self.position % 8 != 0 and BOARD[capture_left].is_empty() == False and BOARD[capture_left].color != self.color:
                 legal.append(capture_left)
 
+            two_steps = self.position + 16
+            if self.position in range(8, 16) and BOARD[two_steps].is_empty():
+                legal.append(two_steps)
+                # TODO en passant
+                
             # TODO promotion
                 
             return legal    
@@ -62,21 +66,20 @@ class Pawn(Square):
             if one_step >= 0 and BOARD[one_step].is_empty():
                 legal.append(one_step)
 
-            two_steps = self.position - 16
-            if self.position in range(48, 56) and BOARD[two_steps].is_empty():
-                legal.append(two_steps)
-                # TODO en passant
-
             capture_right = self.position - 7
-            # Not in far right column 'h' and enemy piece in position
+            # Not in far right file 'h' and enemy piece in position
             if self.position % 8 != 7 and BOARD[capture_right].is_empty() == False and BOARD[capture_right].color != self.color:
                 legal.append(capture_right)
 
             capture_left = self.position - 9
-            # Not in far left column 'a' and enemy piece in position
+            # Not in far left file 'a' and enemy piece in position
             if self.position % 8 != 0 and BOARD[capture_left].is_empty() == False and BOARD[capture_left].color != self.color:
                 legal.append(capture_left)
             
+            two_steps = self.position - 16
+            if self.position in range(48, 56) and BOARD[two_steps].is_empty():
+                legal.append(two_steps)
+                # TODO en passant
             # TODO promotion
 
             return legal  
@@ -96,10 +99,13 @@ class Rook(Square):
     def __init__(self, position: int, color: str, type_: str) -> None:
         super().__init__(position, color, type_)
 
+    def is_empty(self) -> bool:
+        return super().is_empty()
+
     def legal_moves(self):
         legal = []
 
-        for up in range(self.position - 8, 0, -8):
+        for up in range(self.position - 8, -1, -8):
 
             if BOARD[up].color != self.color:
                 legal.append(up)
@@ -115,20 +121,20 @@ class Rook(Square):
             if BOARD[down].is_empty() == False:
                 break
 
-        for left in range(self.position, ((self.position//8) * 8) - 1, -1):
+        for left in range(self.position - 1, ((self.position//8) * 8) - 1, -1):
             
             if BOARD[left].color != self.color:
                 legal.append(left)
 
-            if BOARD[left].is_empty == False:
+            if BOARD[left].is_empty() == False:
                 break
 
-        for right in range(self.position, (self.position//8) * 8 + 8):
+        for right in range(self.position + 1, (self.position//8) * 8 + 8):
             
             if BOARD[right].color != self.color:
                 legal.append(right)
 
-            if BOARD[right].is_empty == False:
+            if BOARD[right].is_empty() == False:
                 break
 
         return legal
@@ -191,7 +197,7 @@ def player_input(turn_color):
     while True:
         try:
             
-            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ")
+            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ").lower()
             print("test0", input_text, UCI_map[input_text[:2]])
             selected_piece = BOARD[UCI_map[input_text[:2]]]
             print("test1", selected_piece)

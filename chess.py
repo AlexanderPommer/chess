@@ -24,6 +24,9 @@ class Square:
     def is_empty(self) -> bool:
         return self.color == "Empty"
 
+    def legal_moves(self):
+        return []
+
 class Pawn(Square):
 
     def __init__(self, position: int, color: str, type_: str, en_passant = False) -> None:
@@ -34,6 +37,7 @@ class Pawn(Square):
         return super().is_empty()
 
     def legal_moves(self):
+
         legal = []
 
         if self.color == 'White':
@@ -90,10 +94,6 @@ class King(Square):
     def __init__(self, position: int, color: str, type_: str) -> None:
         super().__init__(position, color, type_)
 
-class Queen(Square):
-
-    def __init__(self, position: int, color: str, type_: str) -> None:
-        super().__init__(position, color, type_)
 
 class Rook(Square):
 
@@ -139,6 +139,7 @@ class Rook(Square):
                 break
 
         return legal
+
 
 class Knight(Square):
 
@@ -220,6 +221,7 @@ class Knight(Square):
                 legal.append(down2)
 
         return legal
+
 
 class Bishop(Square):
 
@@ -315,6 +317,20 @@ class Bishop(Square):
         return legal
 
 
+class Queen(Rook, Bishop):
+
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
+
+    def is_empty(self) -> bool:
+        return super().is_empty()
+
+    def legal_moves(self):
+        legal = []
+        legal.extend(Rook.legal_moves(self))
+        legal.extend(Bishop.legal_moves(self))
+        return(legal)
+
 def initialize_board():
     BOARD.append(Rook(0, 'White', 'R'))
     BOARD.append(Knight(1, 'White', 'N'))
@@ -371,6 +387,9 @@ def player_input(turn_color):
                 
                 move_from = selected_piece.position
                 move_to = BOARD[UCI_map[input_text[-2:]]].position
+
+                print('test 2 color', selected_piece.color)
+
                 legal = selected_piece.legal_moves()
                 print("test3", 'from:', move_from, 'to:', move_to, 'legal:', legal)
                 rev = []

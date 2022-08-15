@@ -6,32 +6,27 @@ Alexander Michael Pommer Alba
 
 BOARD = [] # 1d board that stores instances of Squares or Pieces
 UCI_map = {} # Universal Chess Interface dictionary to map player input
-counter = 0
 LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-for letter in LETTERS:
-    for number in range(1,9):
+counter = 0
+for number in range(1,9):
+    for letter in LETTERS:
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
 
 class Square:
 
-    def __init__(self, position: int, color: str, type: str) -> None:
+    def __init__(self, position: int, color: str, type_: str) -> None:
         self.position = position # 0 to 63
         self.color = color # 'Black', 'White' or 'Empty'
-        self.type = type
+        self.type_ = type_
 
     def is_empty(self) -> bool:
         return self.color == "Empty"
 
-class Pieces(Square):
+class Pawn(Square):
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
-
-class Pawn(Pieces):
-
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
 
     def legal_moves(self):
         legal = []
@@ -48,63 +43,105 @@ class Pawn(Pieces):
                 # TODO en passant
 
             capture_right = self.position + 9
-            # Not in far right column a
-            if self.position % 8 != 7 and BOARD[capture_right].is_empty() == False:
+            # Not in far right column 'h' and enemy piece in position
+            if self.position % 8 != 7 and BOARD[capture_right].is_empty() == False and BOARD[capture_right].color != self.color:
                 legal.append(capture_right)
             
             capture_left = self.position + 7
-            # Not in far left column h
-            if self.position % 8 != 0 and BOARD[capture_left].is_empty() == False:
+            # Not in far left column 'a' and enemy piece in position
+            if self.position % 8 != 0 and BOARD[capture_left].is_empty() == False and BOARD[capture_left].color != self.color:
                 legal.append(capture_left)
+
+            # TODO promotion
                 
             return legal    
 
         if self.color == 'Black':
+
             one_step = self.position - 8
             if one_step >= 0 and BOARD[one_step].is_empty():
                 legal.append(one_step)
+
             two_steps = self.position - 16
-            if self.position in range(43, 55) and BOARD[two_steps].is_empty():
+            if self.position in range(48, 56) and BOARD[two_steps].is_empty():
                 legal.append(two_steps)
                 # TODO en passant
-            capture_left = self.position - 7
-            if self.position % 8 != 7 and BOARD[capture_left].is_empty() == False:
-                legal.append(capture_left)
-            capture_right = self.position - 9
-            if self.position % 8 != 0 and BOARD[capture_right].is_empty() == False:
+
+            capture_right = self.position - 7
+            # Not in far right column 'h' and enemy piece in position
+            if self.position % 8 != 7 and BOARD[capture_right].is_empty() == False and BOARD[capture_right].color != self.color:
                 legal.append(capture_right)
-            return legal  
+
+            capture_left = self.position - 9
+            # Not in far left column 'a' and enemy piece in position
+            if self.position % 8 != 0 and BOARD[capture_left].is_empty() == False and BOARD[capture_left].color != self.color:
+                legal.append(capture_left)
             
-            pass
-        if self.color == 'Empty': #TODO refactor
-            return []
+            # TODO promotion
 
-    # TODO promotion
+            return legal  
 
-class King(Pieces):
+class King(Square):
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
 
-class Queen(Pieces):
+class Queen(Square):
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
 
-class Rook(Pieces):
+class Rook(Square):
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
 
-class Knight(Pieces):
+    def legal_moves(self):
+        legal = []
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+        for up in range(self.position - 8, 0, -8):
 
-class Bishop(Pieces):
+            if BOARD[up].color != self.color:
+                legal.append(up)
+            
+            if BOARD[up].is_empty() == False:
+                break
 
-    def __init__(self, position: int, color: str, type: str) -> None:
-        super().__init__(position, color, type)
+        for down in range(self.position + 8, 64, 8):
+
+            if BOARD[down].color != self.color:
+                legal.append(down)
+            
+            if BOARD[down].is_empty() == False:
+                break
+
+        for left in range(self.position, ((self.position//8) * 8) - 1, -1):
+            
+            if BOARD[left].color != self.color:
+                legal.append(left)
+
+            if BOARD[left].is_empty == False:
+                break
+
+        for right in range(self.position, (self.position//8) * 8 + 8):
+            
+            if BOARD[right].color != self.color:
+                legal.append(right)
+
+            if BOARD[right].is_empty == False:
+                break
+
+        return legal
+
+class Knight(Square):
+
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
+
+class Bishop(Square):
+
+    def __init__(self, position: int, color: str, type_: str) -> None:
+        super().__init__(position, color, type_)
 
 
 def initialize_board():
@@ -132,23 +169,66 @@ def initialize_board():
     BOARD.append(Rook(63, 'Black', 'r'))
 
 def display_board():
-    print ('\n'*30 )
-    cols = '   |'
+
+    print('\n'*24) # clear screen
+
+    files = '   |' # columns header
     for letter in LETTERS:
-        cols += f' {letter} |'
-    counter = 63
-    column = 8
-    row = cols
-    while counter >= -1:  
-        if counter % 8 == 7:
-            print(row)
-            print('------------------------------------')
-            row = f' {column} |'
-            column -= 1
-        row += f' {BOARD[counter].type} |'
-        counter -= 1
+        files += f' {letter} |'
+    print(files)
 
+    for rank in range(1, 9): # rows
+        ranks = f' {rank} |'
+        for sq in range(rank * 8 - 8, rank * 8):
+            ranks += f' {BOARD[sq].type_} |'
+        print('------------------------------------')
+        print(ranks)
+    print('   ---------------------------------')
+    print('\n'*4)
 
+def player_input(turn_color):
+
+    while True:
+        try:
+            
+            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ")
+            print("test0", input_text, UCI_map[input_text[:2]])
+            selected_piece = BOARD[UCI_map[input_text[:2]]]
+            print("test1", selected_piece)
+
+            if turn_color == selected_piece.color:
+                
+                move_from = selected_piece.position
+                move_to = BOARD[UCI_map[input_text[-2:]]].position
+                legal = selected_piece.legal_moves()
+                print("test3", 'from:', move_from, 'to:', move_to, 'legal:', legal)
+                if move_to in legal:
+                    print("test4 is legal")
+                    
+                    if move_to == 'castle':
+                        # TODO 
+                        pass
+
+                    elif move_to == 'promotion':
+                        # TODO
+                        pass
+
+                    # TODO check if king is threatened
+                    
+                    else:
+                        BOARD[move_from], BOARD[move_to] = Square(move_from, 'Empty', ' '), type(selected_piece)(move_to, selected_piece.color, selected_piece.type_)
+                    
+                    display_board()
+
+                    if turn_color == 'White':
+                        return player_input('Black')
+                    else:
+                        return player_input('White')
+
+        except:
+            pass
+
+# Start the game
 initialize_board()
 display_board()
-print(BOARD[8].legal_moves())
+player_input('White')

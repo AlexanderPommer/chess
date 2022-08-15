@@ -149,6 +149,94 @@ class Bishop(Square):
     def __init__(self, position: int, color: str, type_: str) -> None:
         super().__init__(position, color, type_)
 
+    def is_empty(self) -> bool:
+        return super().is_empty()
+
+    def legal_moves(self):
+        legal = []
+        
+        prev_top_right = self.position
+        for top_right in range(self.position - 7, 0, - 7):
+            
+            # No top right square
+            if prev_top_right // 8 == top_right // 8:
+                break
+
+            # Prevent friendly fire
+            if BOARD[top_right].color == self.color:
+                break
+
+            legal.append(top_right)
+
+            # End path at obstruction
+            if BOARD[top_right].is_empty() == False:
+                break
+
+            # Update trailing variable
+            prev_top_right = top_right
+
+        prev_top_left = self.position
+        for top_left in range(self.position - 9, -1, - 9):
+            
+            # No top left square
+            if prev_top_left // 8 != top_left // 8 + 1:
+                break
+
+            # Prevent friendly fire
+            if BOARD[top_left].color == self.color:
+                break
+
+            legal.append(top_left)
+
+            # End path at obstruction
+            if BOARD[top_left].is_empty() == False:
+                break
+
+            # Update trailing variable
+            prev_top_left = top_left
+
+        prev_bottom_right = self.position
+        for bottom_right in range(self.position + 9, 64, 9):
+            
+            # No bottom right square
+            if prev_bottom_right // 8 + 1 != bottom_right // 8:
+                break
+
+            # Prevent friendly fire
+            if BOARD[bottom_right].color == self.color:
+                break
+
+            legal.append(bottom_right)
+
+            # End path at obstruction
+            if BOARD[bottom_right].is_empty() == False:
+                break
+            
+            # Update trailing variable
+            prev_bottom_right = bottom_right
+
+        prev_bottom_left = self.position
+        for bottom_left in range(self.position + 7, 64, 7):
+            
+            # No bottom left square
+            if prev_bottom_left // 8 == bottom_left // 8:
+                break
+
+            # Prevent friendly fire
+            if BOARD[bottom_left].color == self.color:
+                break
+
+            legal.append(bottom_left)
+
+            # End path at obstruction
+            if BOARD[bottom_left].is_empty() == False:
+                break
+
+            # Update trailing variable
+            prev_bottom_left = bottom_left
+
+        return legal
+
 
 def initialize_board():
     BOARD.append(Rook(0, 'White', 'R'))

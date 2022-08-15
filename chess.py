@@ -12,6 +12,7 @@ for number in range(1,9):
     for letter in LETTERS:
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
+reverse_UCI_map = {value: key for key, value in UCI_map.items()}
 
 class Square:
 
@@ -143,6 +144,82 @@ class Knight(Square):
 
     def __init__(self, position: int, color: str, type_: str) -> None:
         super().__init__(position, color, type_)
+
+    def is_empty(self) -> bool:
+        return super().is_empty()
+
+    def legal_moves(self):
+        legal = []
+
+        up2_right1 = self.position - 15
+        up2_left1 = self.position - 17
+        
+        for up2 in [up2_right1, up2_left1]:
+            
+            # No up2 squares left
+            if self.position // 8 != up2 // 8 + 2:
+                continue
+            
+            if up2 >= 0:
+
+                # Prevent friendly fire
+                if BOARD[up2].color == self.color:
+                    continue
+
+                legal.append(up2)
+        
+        up1_right2 = self.position - 6
+        up1_left2 = self.position - 10
+
+        for up1 in[up1_right2, up1_left2]:
+
+            # No up1 squares left
+            if self.position // 8 != up1 // 8 + 1:
+                continue
+
+            if up1 >= 0:
+
+                # Prevent friendly fire
+                if BOARD[up1].color == self.color:
+                    continue
+
+                legal.append(up1)
+
+        down1_left2 = self.position + 6
+        down1_right2 = self.position +10
+
+        for down1 in [down1_left2, down1_right2]:
+
+            # No down1 squares left
+            if self.position // 8 != down1 // 8 - 1:
+                continue
+
+            if down1 < 64:
+
+                # Prevent friendly fire
+                if BOARD[down1].color == self.color:
+                    continue
+
+                legal.append(down1)
+
+        down2_left1 = self.position + 15
+        down2_right1 = self.position + 17
+
+        for down2 in [down2_left1, down2_right1]:
+
+            # No down2 squares left
+            if self.position // 8 != down2 // 8 - 2:
+                continue
+
+            if down2 < 64:
+
+                # Prevent friendly fire
+                if BOARD[down2].color == self.color:
+                    continue
+
+                legal.append(down2)
+
+        return legal
 
 class Bishop(Square):
 
@@ -296,6 +373,10 @@ def player_input(turn_color):
                 move_to = BOARD[UCI_map[input_text[-2:]]].position
                 legal = selected_piece.legal_moves()
                 print("test3", 'from:', move_from, 'to:', move_to, 'legal:', legal)
+                rev = []
+                for l in legal:
+                    rev.append(reverse_UCI_map[l])
+                print('legal UCI moves', rev)
                 if move_to in legal:
                     print("test4 is legal")
                     

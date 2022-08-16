@@ -65,11 +65,10 @@ class Pawn(Square):
                 # en passant
                 for sq in [two_steps - 1, two_steps + 1]:
                     if BOARD[sq].type_ == 'p':
-                        BOARD[sq].en_passant = self.position - 8
+                        BOARD[sq].en_passant = one_step
 
             if self.en_passant:
                 legal.append(self.en_passant)
-                self.en_passant = False
                 
             # TODO promotion
                 
@@ -98,12 +97,10 @@ class Pawn(Square):
                 # en passant
                 for sq in [two_steps - 1, two_steps + 1]:
                     if BOARD[sq].type_ == 'P':
-                        BOARD[sq].en_passant = self.position + 8
+                        BOARD[sq].en_passant = one_step
 
-            # Bug if en passant capable pawn is selected and illegal move is selected, at turn restart en passant capabiity is lost
             if self.en_passant:
                 legal.append(self.en_passant)
-                self.en_passant = False
 
             # TODO promotion
 
@@ -502,6 +499,10 @@ def player_input(turn_color):
                         BOARD[move_from], BOARD[move_to] = Square(move_from, 'Empty', ' '), type(selected_piece)(move_to, selected_piece.color, selected_piece.type_)
                     
                     display_board()
+
+                    for sq in BOARD:
+                        if sq is Pawn:
+                            sq.en_passant = False
 
                     if turn_color == 'White':
                         return player_input('Black')

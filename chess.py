@@ -4,6 +4,8 @@ Command Line Chess
 Alexander Michael Pommer Alba
 """
 
+from collections import deque # Store boards at different turns
+
 BOARD = [] # 1d board that stores instances of Squares or Pieces
 UCI_map = {} # Universal Chess Interface dictionary to map player input
 LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -59,7 +61,15 @@ class Pawn(Square):
             two_steps = self.position + 16
             if self.position in range(8, 16) and BOARD[two_steps].is_empty():
                 legal.append(two_steps)
-                # TODO en passant
+                
+                # en passant
+                for sq in [two_steps - 1, two_steps + 1]:
+                    if BOARD[sq].type_ == 'p':
+                        BOARD[sq].en_passant = self.position - 8
+
+            if self.en_passant:
+                legal.append(self.en_passant)
+                self.en_passant = False
                 
             # TODO promotion
                 
@@ -84,7 +94,17 @@ class Pawn(Square):
             two_steps = self.position - 16
             if self.position in range(48, 56) and BOARD[two_steps].is_empty():
                 legal.append(two_steps)
-                # TODO en passant
+                
+                # en passant
+                for sq in [two_steps - 1, two_steps + 1]:
+                    if BOARD[sq].type_ == 'P':
+                        BOARD[sq].en_passant = self.position + 8
+
+            # Bug if en passant capable pawn is selected and illegal move is selected, at turn restart en passant capabiity is lost
+            if self.en_passant:
+                legal.append(self.en_passant)
+                self.en_passant = False
+
             # TODO promotion
 
             return legal  
@@ -103,6 +123,12 @@ class King(Square):
             return 'Black'
         else:
             return 'White'
+
+    def check(self, board):
+        for enemy_piece in board:
+            if self.enemy_color(self) == enemy_piece.color:
+                if self.position in enemy_piece.legal_moves():
+                    return True
 
     def legal_moves(self):
         legal = []
@@ -438,15 +464,39 @@ def player_input(turn_color):
                 if move_to in legal:
                     print("test4 is legal")
                     
+                    # TODO check if king is threatened
+
+                    # if a pawn is moving diagonally to an empty square, only en passant is a legal move
+
+                    if selected_piece.type_ == 'p':
+                        
+                        if move_to == move_from - 9 or move_to == move_from - 7 and BOARD[move_to].is_empty():
+
+                            BOARD[move_from] = Square(move_from, 'Empty', ' ')
+                            BOARD[move_to + 8] = Square(move_to + 8, 'Empty', ' ')
+                            BOARD[move_to] = Pawn(move_to, 'Black', 'p')
+                    
+                    if selected_piece.type_ == 'P':
+                        
+                        print("test5 type P")
+                        
+                        if move_to == move_from + 7 or move_to == move_from + 9 and BOARD[move_to].is_empty():
+
+                            print("test6 en passant")
+
+                            BOARD[move_from] = Square(move_from, 'Empty', ' ')
+                            BOARD[move_to - 8] = Square(move_to - 8, 'Empty', ' ')
+                            BOARD[move_to] = Pawn(move_to, 'White', 'P')
+                    
+                    if move_to == 'promotion':
+                        # TODO
+                        pass
+                    
+                    
                     if move_to == 'castle':
                         # TODO 
                         pass
 
-                    elif move_to == 'promotion':
-                        # TODO
-                        pass
-
-                    # TODO check if king is threatened
                     
                     else:
                         BOARD[move_from], BOARD[move_to] = Square(move_from, 'Empty', ' '), type(selected_piece)(move_to, selected_piece.color, selected_piece.type_)

@@ -16,9 +16,10 @@ for number in range(1,9):
         counter += 1
 reverse_UCI_map = {value: key for key, value in UCI_map.items()}
 
+
 class Square:
 
-    def __init__(self, position: int, color: str, type_: str) -> None:
+    def __init__(self, position: int, color = 'Empty', type_ = ' ') -> None:
         self.position = position # 0 to 63
         self.color = color # 'Black', 'White' or 'Empty'
         self.type_ = type_
@@ -28,6 +29,7 @@ class Square:
 
     def legal_moves(self):
         return []
+
 
 class Pawn(Square):
 
@@ -88,7 +90,7 @@ class Pawn(Square):
 
         return legal
         
-    def move(self, move_to):
+    def move(self, move_to, turn_color):
         legal = self.legal_moves()
         rev = []
         for l in legal:
@@ -177,16 +179,16 @@ class Pawn(Square):
 
         # ilegal move, try again
         else:
-            return new_input(self.color)
+            return player_input(turn_color)
 
         return
-                    
+
 
 class King(Square):
 
-    def __init__(self, position: int, color: str, type_: str, has_moved = False) -> None:
+    def __init__(self, position: int, color: str, type_: str, can_castle = False) -> None:
         super().__init__(position, color, type_)
-        self.has_moved = has_moved # Enables Castling if false
+        self.can_castle = can_castle
 
     def is_empty(self) -> bool:
         return super().is_empty()
@@ -228,55 +230,48 @@ class King(Square):
         for sq in [left, right]:
             if sq >= 0 and sq < 64 and self.color != BOARD[sq].color and self.position // 8 == sq // 8:
                 legal.append(sq)
-        
+
+        if self.can_castle:
+
+            left_rook = BOARD[(self.position // 8 * 8)] # object at index 0 or 56
+            right_rook = BOARD[(self.position // 8 * 8 + 7)] # object at index 7 or 63
+
+            if left_rook.is_empty() == False:
+                    l, r = self.position - 2, self.position - 1
+                    if BOARD[l].is_empty() and BOARD[r].is_empty():
+                        legal.append(l)
+            
+            if right_rook.is_empty() == False:
+                if right_rook.can_castle:
+                    l, r = self.position + 1, self.position + 2
+                    if BOARD[l].is_empty() and BOARD[r].is_empty():
+                        legal.append(r)
+                        
         return legal
 
+    def move(self, move_to, turn_color):
+        print('king move() test')
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
 
-class Rook(Square):
+        if move_to in legal:
 
-    def __init__(self, position: int, color: str, type_: str, has_moved = False) -> None:
-        super().__init__(position, color, type_)
-        self.has_moved = has_moved # Enables Castling if false
+            # Castle left
+            if move_to == self.position - 2:
+                BOARD[move_to + 1], BOARD[self.position - 4] = Rook(move_to + 1, self.color, BOARD[self.position - 4].type_), Square(self.position - 4)
 
-    def is_empty(self) -> bool:
-        return super().is_empty()
+            # Castle right
+            elif move_to == self.position + 2:
+                BOARD[move_to - 1], BOARD[self.position + 3] = Rook(move_to + 1, self.color, BOARD[self.position + 3].type_), Square(self.position + 3,)
 
-    def legal_moves(self):
-        legal = []
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), King(move_to, self.color, self.type_)
 
-        for up in range(self.position - 8, -1, -8):
-
-            if BOARD[up].color != self.color:
-                legal.append(up)
-            
-            if BOARD[up].is_empty() == False:
-                break
-
-        for down in range(self.position + 8, 64, 8):
-
-            if BOARD[down].color != self.color:
-                legal.append(down)
-            
-            if BOARD[down].is_empty() == False:
-                break
-
-        for left in range(self.position - 1, ((self.position//8) * 8) - 1, -1):
-            
-            if BOARD[left].color != self.color:
-                legal.append(left)
-
-            if BOARD[left].is_empty() == False:
-                break
-
-        for right in range(self.position + 1, (self.position//8) * 8 + 8):
-            
-            if BOARD[right].color != self.color:
-                legal.append(right)
-
-            if BOARD[right].is_empty() == False:
-                break
-
-        return legal
+        # ilegal move, try again
+        else:
+            return player_input(turn_color)
 
 
 class Knight(Square):
@@ -359,6 +354,83 @@ class Knight(Square):
                 legal.append(down2)
 
         return legal
+    
+    def move(self, move_to, turn_color):
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
+
+        if move_to in legal:
+
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Knight(move_to, self.color, self.type_)
+
+        # ilegal move, try again
+        else:
+            return player_input(turn_color)
+
+
+class Rook(Square):
+
+    def __init__(self, position: int, color: str, type_: str, can_castle = False) -> None:
+        super().__init__(position, color, type_)
+        self.can_castle = can_castle # Enables Castling if false
+
+    def is_empty(self) -> bool:
+        return super().is_empty()
+
+    def legal_moves(self):
+        legal = []
+
+        for up in range(self.position - 8, -1, -8):
+
+            if BOARD[up].color != self.color:
+                legal.append(up)
+            
+            if BOARD[up].is_empty() == False:
+                break
+
+        for down in range(self.position + 8, 64, 8):
+
+            if BOARD[down].color != self.color:
+                legal.append(down)
+            
+            if BOARD[down].is_empty() == False:
+                break
+
+        for left in range(self.position - 1, ((self.position//8) * 8) - 1, -1):
+            
+            if BOARD[left].color != self.color:
+                legal.append(left)
+
+            if BOARD[left].is_empty() == False:
+                break
+
+        for right in range(self.position + 1, (self.position//8) * 8 + 8):
+            
+            if BOARD[right].color != self.color:
+                legal.append(right)
+
+            if BOARD[right].is_empty() == False:
+                break
+
+        return legal
+
+    def move(self, move_to, turn_color):
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
+
+        if move_to in legal:
+
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Rook(move_to, self.color, self.type_)
+
+        # ilegal move, try again
+        else:
+            return player_input(turn_color)
 
 
 class Bishop(Square):
@@ -454,6 +526,21 @@ class Bishop(Square):
 
         return legal
 
+    def move(self, move_to, turn_color):
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
+
+        if move_to in legal:
+
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Bishop(move_to, self.color, self.type_)
+
+        # ilegal move, try again
+        else:
+            return player_input(turn_color)
+
 
 class Queen(Rook, Bishop):
 
@@ -469,29 +556,46 @@ class Queen(Rook, Bishop):
         legal.extend(Bishop.legal_moves(self))
         return(legal)
 
+    def move(self, move_to, turn_color):
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
+
+        if move_to in legal:
+
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Queen(move_to, self.color, self.type_)
+
+        # ilegal move, try again
+        else:
+            return player_input(turn_color)
+
+
 def initialize_board():
-    BOARD.append(Rook(0, 'White', 'R'))
-    BOARD.append(Knight(1, 'White', 'N'))
+    BOARD.append(Rook(0, 'White', 'R', True)) # can_castle defaults to False, it is only set to true on start(when it has not moved)
+    BOARD.append(Knight(1, 'White', 'N'))     # any move will create another instance on the board with default can_castle value
     BOARD.append(Bishop(2, 'White', 'B'))
     BOARD.append(Queen(3, 'White', 'Q'))
-    BOARD.append(King(4, 'White', 'K'))
+    BOARD.append(King(4, 'White', 'K', True))
     BOARD.append(Bishop(5, 'White', 'B'))
     BOARD.append(Knight(6, 'White', 'N'))
-    BOARD.append(Rook(7, 'White', 'R'))
+    BOARD.append(Rook(7, 'White', 'R', True))
     for sq in range(8, 16):
         BOARD.append(Pawn(sq, 'White', 'P'))
     for sq in range(16, 48):
         BOARD.append(Square(sq, 'Empty', ' '))
     for sq in range(48, 56):
         BOARD.append(Pawn(sq, 'Black', 'p'))
-    BOARD.append(Rook(56, 'Black', 'r'))
+    BOARD.append(Rook(56, 'Black', 'r', True))
     BOARD.append(Knight(57, 'Black', 'n'))
     BOARD.append(Bishop(58, 'Black', 'b'))
     BOARD.append(Queen(59, 'Black', 'q'))
-    BOARD.append(King(60, 'Black', 'k'))
+    BOARD.append(King(60, 'Black', 'k', True))
     BOARD.append(Bishop(61, 'Black', 'b'))
     BOARD.append(Knight(62, 'Black', 'n'))
-    BOARD.append(Rook(63, 'Black', 'r'))
+    BOARD.append(Rook(63, 'Black', 'r', True))
+
 
 def display_board():
 
@@ -511,6 +615,7 @@ def display_board():
     print('   ---------------------------------')
     print('\n'*4)
 
+
 def player_input(turn_color):
 
     while True:
@@ -527,86 +632,8 @@ def player_input(turn_color):
                 move_to = BOARD[UCI_map[input_text[-2:]]].position
 
                 print('test 2 color', selected_piece.color)
-
-                legal = selected_piece.legal_moves()
-                print("test3", 'from:', move_from, 'to:', move_to, 'legal:', legal)
-                rev = []
-                for l in legal:
-                    rev.append(reverse_UCI_map[l])
-                print('legal UCI moves', rev)
-                if move_to in legal:
-                    print("test4 is legal")
-                    
-                    # TODO check if king is threatened
-
-                    # if a pawn is moving diagonally to an empty square, only en passant is a legal move
-
-                    if selected_piece.type_ == 'p':
-                        
-                        if move_to == move_from - 9 or move_to == move_from - 7 and BOARD[move_to].is_empty():
-
-                            BOARD[move_from] = Square(move_from, 'Empty', ' ')
-                            BOARD[move_to + 8] = Square(move_to + 8, 'Empty', ' ')
-                            BOARD[move_to] = Pawn(move_to, 'Black', 'p')
-                    
-                    if selected_piece.type_ == 'P':
-                        
-                        print("test5 type P")
-                        
-                        if move_to == move_from + 7 or move_to == move_from + 9 and BOARD[move_to].is_empty():
-
-                            print("test6 en passant")
-
-                            BOARD[move_from] = Square(move_from, 'Empty', ' ')
-                            BOARD[move_to - 8] = Square(move_to - 8, 'Empty', ' ')
-                            BOARD[move_to] = Pawn(move_to, 'White', 'P')
-                    
-                    if move_to == 'promotion':
-                        # TODO
-                        pass
-                    
-                    
-                    if move_to == 'castle':
-                        # TODO 
-                        pass
-
-                    
-                    else:
-                        BOARD[move_from], BOARD[move_to] = Square(move_from, 'Empty', ' '), type(selected_piece)(move_to, selected_piece.color, selected_piece.type_)
-                    
-                    display_board()
-
-                    # REDO as a list of at most 2 pointers to pawns with valid en passant moves
-                    for sq in BOARD:
-                        if sq is Pawn:
-                            sq.en_passant = False
-
-                    if turn_color == 'White':
-                        return player_input('Black')
-                    else:
-                        return player_input('White')
-
-        except:
-            pass
-
-def new_input(turn_color):
-
-    while True:
-        try:
-            
-            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ").lower()
-            print("test0", input_text, UCI_map[input_text[:2]])
-            selected_piece = BOARD[UCI_map[input_text[:2]]]
-            print("test1", selected_piece)
-
-            if turn_color == selected_piece.color:
                 
-                move_from = selected_piece.position
-                move_to = BOARD[UCI_map[input_text[-2:]]].position
-
-                print('test 2 color', selected_piece.color)
-                
-                selected_piece.move(move_to)
+                selected_piece.move(move_to, turn_color)
                 display_board()
 
                 # REDO as a list of at most 2 pointers to pawns with valid en passant moves
@@ -615,9 +642,9 @@ def new_input(turn_color):
                         sq.en_passant = False
 
                 if turn_color == 'White':
-                    return new_input('Black')
+                    return player_input('Black')
                 else:
-                    return new_input('White')
+                    return player_input('White')
 
         except:
             pass
@@ -625,6 +652,5 @@ def new_input(turn_color):
 # Start the game
 initialize_board()
 display_board()
-new_input('White')
+player_input('White')
 # print(type(BOARD[0]).__name__)    # Rook
-# player_input('White')

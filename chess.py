@@ -5,6 +5,7 @@ Alexander Michael Pommer Alba
 """
 
 from collections import deque # Store boards at different turns
+from time import sleep
 
 BOARD = [] # 1d board that stores instances of Squares or Pieces
 UCI_map = {} # Universal Chess Interface dictionary to map player input
@@ -15,6 +16,8 @@ for number in range(1,9):
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
 reverse_UCI_map = {value: key for key, value in UCI_map.items()}
+KINGS = {} # Tracks kings to make checks easier to compute
+EN_PASSANT = []
 
 
 class Square:
@@ -199,11 +202,13 @@ class King(Square):
         else:
             return 'White'
 
-    def check(self, board):
-        for enemy_piece in board:
-            if self.enemy_color(self) == enemy_piece.color:
+    def check(self):
+        print('test check 0')
+        for enemy_piece in BOARD:
+            if self.enemy_color() == enemy_piece.color:
                 if self.position in enemy_piece.legal_moves():
                     return True
+        return False
 
     def legal_moves(self):
         legal = []
@@ -250,7 +255,6 @@ class King(Square):
         return legal
 
     def move(self, move_to, turn_color):
-        print('king move() test')
         legal = self.legal_moves()
         rev = []
         for l in legal:
@@ -268,6 +272,8 @@ class King(Square):
                 BOARD[move_to - 1], BOARD[self.position + 3] = Rook(move_to + 1, self.color, BOARD[self.position + 3].type_), Square(self.position + 3,)
 
             BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), King(move_to, self.color, self.type_)
+
+            KINGS[turn_color] = BOARD[move_to]
 
         # ilegal move, try again
         else:
@@ -573,11 +579,12 @@ class Queen(Rook, Bishop):
 
 
 def initialize_board():
-    BOARD.append(Rook(0, 'White', 'R', True)) # can_castle defaults to False, it is only set to true on start(when it has not moved)
-    BOARD.append(Knight(1, 'White', 'N'))     # any move will create another instance on the board with default can_castle value
+    BOARD.append(Rook(0, 'White', 'R', True)) # can_castle defaults to False, it is only set to true on start(when a piece has not moved)
+    BOARD.append(Knight(1, 'White', 'N'))     # any move will create another instance on the board setting can_castle to its default value
     BOARD.append(Bishop(2, 'White', 'B'))
     BOARD.append(Queen(3, 'White', 'Q'))
     BOARD.append(King(4, 'White', 'K', True))
+    KINGS['White'] = BOARD[4]
     BOARD.append(Bishop(5, 'White', 'B'))
     BOARD.append(Knight(6, 'White', 'N'))
     BOARD.append(Rook(7, 'White', 'R', True))
@@ -592,6 +599,7 @@ def initialize_board():
     BOARD.append(Bishop(58, 'Black', 'b'))
     BOARD.append(Queen(59, 'Black', 'q'))
     BOARD.append(King(60, 'Black', 'k', True))
+    KINGS['Black'] = BOARD[60]
     BOARD.append(Bishop(61, 'Black', 'b'))
     BOARD.append(Knight(62, 'Black', 'n'))
     BOARD.append(Rook(63, 'Black', 'r', True))
@@ -622,16 +630,15 @@ def player_input(turn_color):
         try:
             
             input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ").lower()
-            print("test0", input_text, UCI_map[input_text[:2]])
             selected_piece = BOARD[UCI_map[input_text[:2]]]
+
             print("test1", selected_piece)
+            print(KINGS)
 
             if turn_color == selected_piece.color:
                 
                 move_from = selected_piece.position
                 move_to = BOARD[UCI_map[input_text[-2:]]].position
-
-                print('test 2 color', selected_piece.color)
                 
                 selected_piece.move(move_to, turn_color)
                 display_board()
@@ -640,6 +647,18 @@ def player_input(turn_color):
                 for sq in BOARD:
                     if sq is Pawn:
                         sq.en_passant = False
+
+                # Check
+                own_king = KINGS[turn_color]
+                print('Own king', own_king, own_king.color)
+                if own_king.check():
+                    return player_input(turn_color)
+                
+                enemy_king = KINGS[own_king.enemy_color()]
+                print('Enemy king', enemy_king, enemy_king.color)
+                if enemy_king.check():
+                    print('Check!')
+                    sleep(2.5)
 
                 if turn_color == 'White':
                     return player_input('Black')

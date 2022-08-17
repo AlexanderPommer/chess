@@ -624,16 +624,16 @@ def display_board():
     print('\n'*4)
 
 
-def player_input(turn_color):
+def player_input(turn_color, checked = False):
 
     while True:
         try:
             
-            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ").lower()
+            input_text = input(f"{turn_color} player move: ").lower()
+            if input_text == 'resign':
+                print(KINGS[turn_color].enemy_color(), 'Wins!')
+                break
             selected_piece = BOARD[UCI_map[input_text[:2]]]
-
-            print("test1", selected_piece)
-            print(KINGS)
 
             if turn_color == selected_piece.color:
                 
@@ -650,15 +650,18 @@ def player_input(turn_color):
 
                 # Check
                 own_king = KINGS[turn_color]
-                print('Own king', own_king, own_king.color)
-                if own_king.check():
-                    return player_input(turn_color)
-                
                 enemy_king = KINGS[own_king.enemy_color()]
-                print('Enemy king', enemy_king, enemy_king.color)
+
+                if own_king.check():
+                    if checked:
+                        print('Checkmate', enemy_king.color, 'Wins!')
+                        break
+                    return player_input(turn_color)
+
                 if enemy_king.check():
                     print('Check!')
                     sleep(2.5)
+                    return player_input(enemy_king.color, checked = True)
 
                 if turn_color == 'White':
                     return player_input('Black')

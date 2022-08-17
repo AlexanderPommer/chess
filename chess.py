@@ -14,7 +14,7 @@ for number in range(1,9):
     for letter in LETTERS:
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
-reverse_UCI_map = {value: key for key, value in UCI_map.items()} # debug tool
+reverse_UCI_map = {value: key for key, value in UCI_map.items()}
 
 class Square:
 
@@ -61,18 +61,6 @@ class Pawn(Square):
             two_steps = self.position + 16
             if self.position in range(8, 16) and BOARD[two_steps].is_empty():
                 legal.append(two_steps)
-                
-                # en passant
-                for sq in [two_steps - 1, two_steps + 1]:
-                    if BOARD[sq].type_ == 'p':
-                        BOARD[sq].en_passant = one_step
-
-            if self.en_passant:
-                legal.append(self.en_passant)
-                
-            # TODO promotion
-                
-            return legal    
 
         if self.color == 'Black':
 
@@ -94,17 +82,105 @@ class Pawn(Square):
             if self.position in range(48, 56) and BOARD[two_steps].is_empty():
                 legal.append(two_steps)
                 
-                # en passant
-                for sq in [two_steps - 1, two_steps + 1]:
-                    if BOARD[sq].type_ == 'P':
-                        BOARD[sq].en_passant = one_step
+        if self.en_passant:
+            legal.append(self.en_passant)
+            # TODO Add some pointer to remove en passant after next turn
 
-            if self.en_passant:
-                legal.append(self.en_passant)
+        return legal
+        
+    def move(self, move_to):
+        legal = self.legal_moves()
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal UCI moves', rev)
 
-            # TODO promotion
+        if move_to in legal:
+            
+            if self.color == 'White':
 
-            return legal  
+                # Set en passant
+                if move_to == self.position + 16: # if 2 step move
+                    for side_pawn in [move_to - 1, move_to + 1]: # check for enemy neighboring pawns that could intercept en passant
+                        if side_pawn in range((move_to // 8) * 8, (move_to // 8) * 8 + 8) and BOARD[side_pawn].type_ == 'p':
+                                BOARD[side_pawn].en_passant = move_to - 8 # set interception position
+                
+                # Execute en passant
+                # if a pawn can move diagonally to an empty square, only en passant is such a legal move
+                elif move_to == self.position + 7 or move_to == self.position + 9 and BOARD[move_to].is_empty():
+                    
+                    BOARD[move_to - 8] = Square(move_to - 8, 'Empty', ' ')
+
+                # Promote if pawn reaches it's highest rank
+                elif move_to in range(56, 64):
+                    while True:
+                        try:
+                            promotion = input(f"Type 'Queen', 'Rook', 'Knight' or 'Bishop' to promote pawn at {reverse_UCI_map[move_to]}: ").lower()
+
+                            if promotion[:1] == 'q':
+                                pro = Queen(move_to, self.color, 'Q')
+                            if promotion[:1] == 'r':
+                                pro = Rook(move_to, self.color, 'R')
+                            if promotion[:1] == 'k':
+                                pro = Knight(move_to, self.color, 'N')
+                            if promotion[:1] == 'b':
+                                pro = Bishop(move_to, self.color, 'B')
+
+                            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), pro
+
+                            return
+                            
+                        except:
+                            pass
+
+            
+            if self.color == 'Black':
+
+                print(f'Test Black pawn moving to {reverse_UCI_map[move_to]}')
+                        
+                # Set en passant
+                if move_to == self.position - 16: # if 2 step move
+                    for side_pawn in [move_to - 1, move_to + 1]: # check for enemy neighboring pawns that could intercept en passant
+                        if side_pawn in range((move_to // 8) * 8, (move_to // 8) * 8 + 8) and BOARD[side_pawn].type_ == 'P':
+                                BOARD[side_pawn].en_passant = move_to + 8 # set interception position
+                
+                # Execute en passant
+                # if a pawn can move diagonally to an empty square, only en passant is such a legal move
+                elif move_to == self.position - 9 or move_to == self.position - 7 and BOARD[move_to].is_empty():
+
+                    BOARD[move_to + 8] = Square(move_to + 8, 'Empty', ' ')
+
+                # Promote if pawn reaches it's highest rank
+                elif move_to in range(0, 8):
+                    while True:
+                        try:
+                            promotion = input(f"Type 'Queen', 'Rook', 'Knight' or 'Bishop' to promote pawn at {reverse_UCI_map[move_to]}: ").lower()
+                        
+                            if promotion[:1] == 'q':
+                                pro = Queen(move_to, self.color, 'q')
+                            elif promotion[:1] == 'k':
+                                pro = Knight(move_to, self.color, 'n')
+                            elif promotion[:1] == 'r':
+                                pro = Rook(move_to, self.color, 'r')
+                            elif promotion[:1] == 'b':
+                                pro = Bishop(move_to, self.color, 'b')
+
+                            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), pro
+
+                            return
+                    
+                        except:
+                            pass
+
+            # Basic move
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Pawn(move_to, self.color, self.type_)
+
+        # ilegal move, try again
+        else:
+            return new_input(self.color)
+
+        return
+                    
 
 class King(Square):
 
@@ -500,6 +576,7 @@ def player_input(turn_color):
                     
                     display_board()
 
+                    # REDO as a list of at most 2 pointers to pawns with valid en passant moves
                     for sq in BOARD:
                         if sq is Pawn:
                             sq.en_passant = False
@@ -512,7 +589,42 @@ def player_input(turn_color):
         except:
             pass
 
+def new_input(turn_color):
+
+    while True:
+        try:
+            
+            input_text = input(f"{turn_color} player move (e.g. 'c2c4'): ").lower()
+            print("test0", input_text, UCI_map[input_text[:2]])
+            selected_piece = BOARD[UCI_map[input_text[:2]]]
+            print("test1", selected_piece)
+
+            if turn_color == selected_piece.color:
+                
+                move_from = selected_piece.position
+                move_to = BOARD[UCI_map[input_text[-2:]]].position
+
+                print('test 2 color', selected_piece.color)
+                
+                selected_piece.move(move_to)
+                display_board()
+
+                # REDO as a list of at most 2 pointers to pawns with valid en passant moves
+                for sq in BOARD:
+                    if sq is Pawn:
+                        sq.en_passant = False
+
+                if turn_color == 'White':
+                    return new_input('Black')
+                else:
+                    return new_input('White')
+
+        except:
+            pass
+
 # Start the game
 initialize_board()
 display_board()
-player_input('White')
+new_input('White')
+# print(type(BOARD[0]).__name__)    # Rook
+# player_input('White')

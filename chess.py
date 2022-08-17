@@ -98,7 +98,7 @@ class Pawn(Square):
         rev = []
         for l in legal:
             rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
+        print('legal moves', rev)
 
         if move_to in legal:
             
@@ -203,7 +203,6 @@ class King(Square):
             return 'White'
 
     def check(self):
-        print('test check 0')
         for enemy_piece in BOARD:
             if self.enemy_color() == enemy_piece.color:
                 if self.position in enemy_piece.legal_moves():
@@ -256,10 +255,6 @@ class King(Square):
 
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
 
         if move_to in legal:
 
@@ -277,6 +272,10 @@ class King(Square):
 
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
 
 
@@ -363,10 +362,6 @@ class Knight(Square):
     
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
 
         if move_to in legal:
 
@@ -374,6 +369,10 @@ class Knight(Square):
 
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
 
 
@@ -425,10 +424,6 @@ class Rook(Square):
 
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
 
         if move_to in legal:
 
@@ -436,6 +431,10 @@ class Rook(Square):
 
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
 
 
@@ -534,10 +533,6 @@ class Bishop(Square):
 
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
 
         if move_to in legal:
 
@@ -545,6 +540,10 @@ class Bishop(Square):
 
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
 
 
@@ -564,10 +563,6 @@ class Queen(Rook, Bishop):
 
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal UCI moves', rev)
 
         if move_to in legal:
 
@@ -575,6 +570,10 @@ class Queen(Rook, Bishop):
 
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
 
 
@@ -629,7 +628,7 @@ def player_input(turn_color, checked = False):
     while True:
         try:
             
-            input_text = input(f"{turn_color} player move: ").lower()
+            input_text = input(f"{turn_color} player's move: ").lower()
             if input_text == 'resign':
                 print(KINGS[turn_color].enemy_color(), 'Wins!')
                 break
@@ -654,7 +653,9 @@ def player_input(turn_color, checked = False):
 
                 if own_king.check():
                     if checked:
-                        print('Checkmate', enemy_king.color, 'Wins!')
+                        print('Checkmate!')
+                        sleep(1)
+                        print(enemy_king.color, 'wins!')
                         break
                     return player_input(turn_color)
 
@@ -671,8 +672,7 @@ def player_input(turn_color, checked = False):
         except:
             pass
 
-# Start the game
+# Run the game
 initialize_board()
 display_board()
 player_input('White')
-# print(type(BOARD[0]).__name__)    # Rook

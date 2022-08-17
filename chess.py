@@ -95,12 +95,11 @@ class Pawn(Square):
         
     def move(self, move_to, turn_color):
         legal = self.legal_moves()
-        rev = []
-        for l in legal:
-            rev.append(reverse_UCI_map[l])
-        print('legal moves', rev)
 
         if move_to in legal:
+
+            # Basic move
+            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Pawn(move_to, self.color, self.type_)
             
             if self.color == 'White':
 
@@ -134,14 +133,12 @@ class Pawn(Square):
                             BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), pro
 
                             return
-                            
+
                         except:
                             pass
 
             
-            if self.color == 'Black':
-
-                print(f'Test Black pawn moving to {reverse_UCI_map[move_to]}')
+            elif self.color == 'Black':
                         
                 # Set en passant
                 if move_to == self.position - 16: # if 2 step move
@@ -177,14 +174,13 @@ class Pawn(Square):
                         except:
                             pass
 
-            # Basic move
-            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Pawn(move_to, self.color, self.type_)
-
         # ilegal move, try again
         else:
+            rev = []
+            for l in legal:
+                rev.append(reverse_UCI_map[l])
+            print('legal moves', rev)
             return player_input(turn_color)
-
-        return
 
 
 class King(Square):
@@ -661,7 +657,7 @@ def player_input(turn_color, checked = False):
 
                 if enemy_king.check():
                     print('Check!')
-                    sleep(2.5)
+                    sleep(2)
                     return player_input(enemy_king.color, checked = True)
 
                 if turn_color == 'White':

@@ -4,7 +4,6 @@ Command Line Chess
 Alexander Michael Pommer Alba
 """
 
-from collections import deque # Store boards at different turns
 from time import sleep
 
 BOARD = [] # 1d board that stores instances of Squares or Pieces
@@ -15,9 +14,9 @@ for number in range(1,9):
     for letter in LETTERS:
         UCI_map[f'{letter}{number}'] = counter
         counter += 1
-reverse_UCI_map = {value: key for key, value in UCI_map.items()}
+reverse_UCI_map = {value: key for key, value in UCI_map.items()} # Helps users see legal moves for a selected piece
 KINGS = {} # Tracks kings to make checks easier to compute
-EN_PASSANT = []
+EN_PASSANT = [] # Tracks pawns capable of an en passant move, helps remove such capacity after one turn
 
 
 class Square:
@@ -89,7 +88,6 @@ class Pawn(Square):
                 
         if self.en_passant:
             legal.append(self.en_passant)
-            # TODO Add some pointer to remove en passant after next turn
 
         return legal
         
@@ -97,9 +95,6 @@ class Pawn(Square):
         legal = self.legal_moves()
 
         if move_to in legal:
-
-            # Basic move
-            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), Pawn(move_to, self.color, self.type_)
             
             if self.color == 'White':
 
@@ -107,13 +102,17 @@ class Pawn(Square):
                 if move_to == self.position + 16: # if 2 step move
                     for side_pawn in [move_to - 1, move_to + 1]: # check for enemy neighboring pawns that could intercept en passant
                         if side_pawn in range((move_to // 8) * 8, (move_to // 8) * 8 + 8) and BOARD[side_pawn].type_ == 'p':
-                                BOARD[side_pawn].en_passant = move_to - 8 # set interception position
+
+                            BOARD[side_pawn].en_passant = move_to - 8 # set interception position
+                            EN_PASSANT.append(BOARD[side_pawn]) # track pawns
+
+                    BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)
                 
                 # Execute en passant
-                # if a pawn can move diagonally to an empty square, only en passant is such a legal move
-                elif move_to == self.position + 7 or move_to == self.position + 9 and BOARD[move_to].is_empty():
-                    
-                    BOARD[move_to - 8] = Square(move_to - 8, 'Empty', ' ')
+                # if a pawn can move to an empty square diagonally
+                elif BOARD[move_to].is_empty() and (move_to == self.position + 7 or move_to == self.position + 9):
+                        BOARD[move_to - 8] = Square(move_to - 8)
+                        BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)
 
                 # Promote if pawn reaches it's highest rank
                 elif move_to in range(56, 64):
@@ -122,20 +121,22 @@ class Pawn(Square):
                             promotion = input(f"Type 'Queen', 'Rook', 'Knight' or 'Bishop' to promote pawn at {reverse_UCI_map[move_to]}: ").lower()
 
                             if promotion[:1] == 'q':
-                                pro = Queen(move_to, self.color, 'Q')
-                            if promotion[:1] == 'r':
-                                pro = Rook(move_to, self.color, 'R')
-                            if promotion[:1] == 'k':
-                                pro = Knight(move_to, self.color, 'N')
-                            if promotion[:1] == 'b':
-                                pro = Bishop(move_to, self.color, 'B')
-
-                            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), pro
-
-                            return
-
+                                BOARD[self.position], BOARD[move_to] = Square(self.position), Queen(move_to, self.color, 'Q')
+                                return
+                            elif promotion[:1] == 'r':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position), Rook(move_to, self.color, 'R')
+                                return
+                            elif promotion[:1] == 'k':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position), Knight(move_to, self.color, 'N')
+                                return
+                            elif promotion[:1] == 'b':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position), Bishop(move_to, self.color, 'B')
+                                return
                         except:
                             pass
+                else:
+                    # Basic move
+                    BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)
 
             
             elif self.color == 'Black':
@@ -144,36 +145,48 @@ class Pawn(Square):
                 if move_to == self.position - 16: # if 2 step move
                     for side_pawn in [move_to - 1, move_to + 1]: # check for enemy neighboring pawns that could intercept en passant
                         if side_pawn in range((move_to // 8) * 8, (move_to // 8) * 8 + 8) and BOARD[side_pawn].type_ == 'P':
-                                BOARD[side_pawn].en_passant = move_to + 8 # set interception position
+
+                            BOARD[side_pawn].en_passant = move_to + 8 # set interception position
+                            EN_PASSANT.append(BOARD[side_pawn]) # track pawns
+                    # Basic move
+                    BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)
                 
                 # Execute en passant
-                # if a pawn can move diagonally to an empty square, only en passant is such a legal move
-                elif move_to == self.position - 9 or move_to == self.position - 7 and BOARD[move_to].is_empty():
+                    # if a pawn can move to an empty square diagonally
+                elif BOARD[move_to].is_empty() and (move_to == self.position - 9 or move_to == self.position - 7):
 
-                    BOARD[move_to + 8] = Square(move_to + 8, 'Empty', ' ')
-
-                # Promote if pawn reaches it's highest rank
+                        BOARD[move_to + 8] = Square(move_to + 8, 'Empty', ' ')
+                        # Basic move
+                        BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)
+                
+                    # Promote if pawn reaches it's highest rank
                 elif move_to in range(0, 8):
                     while True:
                         try:
-                            promotion = input(f"Type 'Queen', 'Rook', 'Knight' or 'Bishop' to promote pawn at {reverse_UCI_map[move_to]}: ").lower()
+                            promote_black = input(f"Type 'Queen', 'Rook', 'Knight' or 'Bishop' to promote pawn at {reverse_UCI_map[move_to]}: ").lower()
                         
-                            if promotion[:1] == 'q':
-                                pro = Queen(move_to, self.color, 'q')
-                            elif promotion[:1] == 'k':
-                                pro = Knight(move_to, self.color, 'n')
-                            elif promotion[:1] == 'r':
-                                pro = Rook(move_to, self.color, 'r')
-                            elif promotion[:1] == 'b':
-                                pro = Bishop(move_to, self.color, 'b')
-
-                            BOARD[self.position], BOARD[move_to] = Square(self.position, 'Empty', ' '), pro
-
-                            return
+                            if promote_black[:1] == 'q':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position),Queen(move_to, self.color, 'q')
+                                return
+                            elif promote_black[:1] == 'k':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position),Knight(move_to, self.color, 'n')
+                                return
+                            elif promote_black[:1] == 'r':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position),Rook(move_to, self.color, 'r')
+                                return
+                            elif promote_black[:1] == 'b':
+                                BOARD[self.position], BOARD[move_to] = Square(self.position),Bishop(move_to, self.color, 'b')
+                                return
                     
                         except:
                             pass
 
+                else:
+                    # Basic move
+                    BOARD[self.position], BOARD[move_to] = Square(self.position), Pawn(move_to, self.color, self.type_)      
+
+                
+            
         # ilegal move, try again
         else:
             rev = []
@@ -628,25 +641,24 @@ def player_input(turn_color, checked = False):
             if input_text == 'resign':
                 print(KINGS[turn_color].enemy_color(), 'Wins!')
                 break
+
             selected_piece = BOARD[UCI_map[input_text[:2]]]
 
             if turn_color == selected_piece.color:
                 
-                move_from = selected_piece.position
                 move_to = BOARD[UCI_map[input_text[-2:]]].position
                 
                 selected_piece.move(move_to, turn_color)
+
                 display_board()
 
-                # REDO as a list of at most 2 pointers to pawns with valid en passant moves
-                for sq in BOARD:
-                    if sq is Pawn:
-                        sq.en_passant = False
+                sleep(1.5) # Allows Demo with copy paste from a list of moves 
 
-                # Check
+                # Check helpers
                 own_king = KINGS[turn_color]
                 enemy_king = KINGS[own_king.enemy_color()]
-
+                
+                # Checkmate
                 if own_king.check():
                     if checked:
                         print('Checkmate!')
@@ -655,10 +667,17 @@ def player_input(turn_color, checked = False):
                         break
                     return player_input(turn_color)
 
+                # Check
                 if enemy_king.check():
                     print('Check!')
-                    sleep(2)
+                    sleep(1)
                     return player_input(enemy_king.color, checked = True)
+
+                # Ensure pawns are only capable of an en passant move for a single turn
+                for pawn in EN_PASSANT:
+                    if pawn.color == turn_color:
+                        pawn.en_passant = False
+                        EN_PASSANT.remove(pawn)
 
                 if turn_color == 'White':
                     return player_input('Black')

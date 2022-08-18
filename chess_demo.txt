@@ -7,7 +7,7 @@ e7e5
 g2g4
 d8h4
 e1f2
-
+ 
 Scholar's Mate
 
 e2e4
@@ -18,7 +18,7 @@ d1h5
 g8f6
 h5f7
 e8f7
-
+ 
 Smothered Mate
 
 e2e4
@@ -33,7 +33,7 @@ d1e2
 g8f6
 e4d6
 e7d6
-
+ 
 Englund's Gambit Mate
 
 d2d4
@@ -53,7 +53,7 @@ b4c3
 d2c3
 b2c1
 e1d1
-
+ 
 -- Special Moves --
 
 en passant & pawn promotion
@@ -67,7 +67,7 @@ a7a6
 c6c7
 a6a5
 c7b8
-
+ 
 Castle
 
 e2e4
@@ -78,3 +78,4 @@ g1f3
 g8f6
 e1g1
 e8g8
+ 

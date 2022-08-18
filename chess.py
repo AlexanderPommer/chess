@@ -32,6 +32,12 @@ class Square:
     def legal_moves(self):
         return []
 
+    def print_legal_moves(self, legal):
+        rev = []
+        for l in legal:
+            rev.append(reverse_UCI_map[l])
+        print('legal moves', rev)
+
 
 class Pawn(Square):
 
@@ -189,10 +195,7 @@ class Pawn(Square):
             
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -281,10 +284,7 @@ class King(Square):
 
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -378,10 +378,7 @@ class Knight(Square):
 
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -440,10 +437,7 @@ class Rook(Square):
 
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -549,10 +543,7 @@ class Bishop(Square):
 
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -579,10 +570,7 @@ class Queen(Rook, Bishop):
 
         # ilegal move, try again
         else:
-            rev = []
-            for l in legal:
-                rev.append(reverse_UCI_map[l])
-            print('legal moves', rev)
+            super().print_legal_moves(legal)
             return player_input(turn_color)
 
 
@@ -652,7 +640,7 @@ def player_input(turn_color, checked = False):
 
                 display_board()
 
-                sleep(1.5) # Allows Demo with copy paste from a list of moves 
+                sleep(1.5) # Allows Demo using copy + paste from a list of moves 
 
                 # Check helpers
                 own_king = KINGS[turn_color]

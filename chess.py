@@ -603,7 +603,7 @@ def initialize_board():
 
 def display_board():
 
-    print('\n'*24) # clear screen
+    print('\n'*3) # clear screen
 
     files = '   |' # columns header
     for letter in LETTERS:
@@ -617,7 +617,7 @@ def display_board():
         print('------------------------------------')
         print(ranks)
     print('   ---------------------------------')
-    print('\n'*4)
+    print('\n'*3)
 
 
 def player_input(turn_color, checked = False):
@@ -640,7 +640,7 @@ def player_input(turn_color, checked = False):
 
                 display_board()
 
-                sleep(1.5) # Allows Demo using copy + paste from a list of moves 
+                sleep(1.25) # Allows Demo using copy + paste from a list of moves 
 
                 # Check helpers
                 own_king = KINGS[turn_color]

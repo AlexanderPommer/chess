@@ -203,7 +203,7 @@ class King(Square):
 
     def __init__(self, position: int, color: str, type_: str, can_castle = False) -> None:
         super().__init__(position, color, type_)
-        self.can_castle = can_castle
+        self.can_castle = can_castle # Enables castling if True
 
     def is_empty(self) -> bool:
         return super().is_empty()
@@ -386,7 +386,7 @@ class Rook(Square):
 
     def __init__(self, position: int, color: str, type_: str, can_castle = False) -> None:
         super().__init__(position, color, type_)
-        self.can_castle = can_castle # Enables Castling if false
+        self.can_castle = can_castle # Enables Castling if True
 
     def is_empty(self) -> bool:
         return super().is_empty()

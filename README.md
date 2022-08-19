@@ -14,7 +14,7 @@ you will be prompted for the white player's move. You can type moves in the Univ
 
 This was built from an Object Oriented Programing (OOP) outlook.
 
-The chess board `BOARD` is represented by a 1 dimensional list of 64 objects that are instances of classes. It could be represented as 2d or with extra objects that could aid in computing moves. I found it simpler to work with a 1d list. To get a rank (row) for a given position the program does a floor division `x // 8` by and to get the file (column) it uses modulo `x % 8`.
+The chess board `BOARD` is represented by a 1 dimensional list of 64 objects that are instances of classes. It could be represented as 2d or with extra objects that could aid in computing moves. I found it simpler to work with a 1d list. To get a rank (row) for a given position the program does a floor division `x // 8` and to get the file (column) it uses modulo `x % 8`.
 
 The base class `Square` has attributes `position`, `color` and `type_` and a few basic methods that are inherited and/or extended by the rest of the piece classes.
 The `Pawn` class extends `Square.__init()__` with the attribute `en_passant` that tracks if a pawn can perform an en passant move. The `King` and `Rook` classes also extended the `__init__` method with an attribute `can_castle` that records whether those pieces have moved previously (if so castling is ilegal).
